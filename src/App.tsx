@@ -9,21 +9,25 @@ import Proof from './pages/Proof';
 
 import NotFound from './pages/NotFound';
 
+import { JobProvider } from './context/JobContext';
+
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/saved" element={<Saved />} />
-          <Route path="/digest" element={<Digest />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/proof" element={<Proof />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <JobProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/saved" element={<Saved />} />
+            <Route path="/digest" element={<Digest />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/proof" element={<Proof />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </JobProvider>
   );
 }
 
