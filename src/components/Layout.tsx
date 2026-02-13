@@ -1,92 +1,111 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from './Button';
 
 interface LayoutProps {
     children: React.ReactNode;
-    projectName?: string;
-    stepCurrent?: number;
-    stepTotal?: number;
-    status?: 'Not Started' | 'In Progress' | 'Shipped';
     title?: string;
     subtitle?: string;
 }
 
 export const Layout: React.FC<LayoutProps> = ({
     children,
-    projectName = 'KodNest Job Tracker',
-    stepCurrent = 1,
-    stepTotal = 5,
-    status = 'In Progress',
-    title = 'Design System Demo',
-    subtitle = 'Reviewing the core components and layout structure.',
+    title,
+    subtitle,
 }) => {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const location = useLocation();
+
+    const navigation = [
+        { name: 'Dashboard', path: '/dashboard' },
+        { name: 'Saved', path: '/saved' },
+        { name: 'Digest', path: '/digest' },
+        { name: 'Settings', path: '/settings' },
+        { name: 'Proof', path: '/proof' },
+    ];
+
+    const getPageTitle = () => {
+        if (title) return title;
+        const currentPath = location.pathname;
+        const route = navigation.find(n => n.path === currentPath);
+        return route ? route.name : 'KodNest Job Tracker';
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-[var(--bg-primary)] font-body text-[var(--text-primary)]">
             {/* Top Bar */}
             <header className="h-16 border-b border-[var(--border-color)] bg-white flex items-center justify-between px-6 sticky top-0 z-50">
-                <div className="flex items-center gap-4">
-                    <span className="font-bold text-lg tracking-tight">{projectName}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                    <span>Step {stepCurrent} of {stepTotal}</span>
-                    <div className="w-24 h-1 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-[var(--accent-primary)] transition-all duration-300"
-                            style={{ width: `${(stepCurrent / stepTotal) * 100}%` }}
-                        />
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${status === 'Shipped' ? 'bg-green-100 text-green-700 border-green-200' :
-                        status === 'In Progress' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                            'bg-gray-100 text-gray-700 border-gray-200'
-                        }`}>
-                        {status}
+                <div className="flex items-center gap-8">
+                    <span className="font-bold text-lg tracking-tight font-serif text-[var(--text-primary)]">
+                        KodNest Job Tracker
                     </span>
+
+                    {/* Desktop Navigation */}
+                    <nav className="hidden md:flex items-center gap-6">
+                        {navigation.map((item) => (
+                            <NavLink
+                                key={item.name}
+                                to={item.path}
+                                className={({ isActive }) =>
+                                    `text-sm font-medium transition-colors hover:text-[var(--accent-primary)] ${isActive
+                                        ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)]'
+                                        : 'text-[var(--text-muted)] border-b-2 border-transparent'
+                                    }`
+                                }
+                            >
+                                {item.name}
+                            </NavLink>
+                        ))}
+                    </nav>
                 </div>
+
+                {/* Mobile Menu Button */}
+                <button
+                    className="md:hidden p-2 text-[var(--text-primary)]"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
             </header>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden bg-white border-b border-[var(--border-color)] px-6 py-4 flex flex-col gap-4">
+                    {navigation.map((item) => (
+                        <NavLink
+                            key={item.name}
+                            to={item.path}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={({ isActive }) =>
+                                `text-base font-medium py-2 ${isActive ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'
+                                }`
+                            }
+                        >
+                            {item.name}
+                        </NavLink>
+                    ))}
+                </div>
+            )}
 
             {/* Context Header */}
             <div className="bg-[var(--bg-primary)] px-8 py-12 text-center border-b border-[var(--border-color)]">
                 <div className="max-w-[var(--max-width-text)] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-serif font-bold text-[var(--text-primary)] mb-4 leading-tight">
-                        {title}
+                        {getPageTitle()}
                     </h1>
-                    <p className="text-lg text-[var(--text-muted)] leading-relaxed">
-                        {subtitle}
-                    </p>
+                    {subtitle && (
+                        <p className="text-lg text-[var(--text-muted)] leading-relaxed">
+                            {subtitle}
+                        </p>
+                    )}
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col md:flex-row w-full max-w-[1400px] mx-auto p-6 md:p-10 gap-10">
-                {/* Primary Workspace (70%) */}
-                <section className="flex-1 w-full md:w-[70%]">
-                    {/* This is where the main content goes */}
-                    {children}
-                </section>
-
-                {/* Secondary Panel (30%) */}
-                <aside className="w-full md:w-[30%] space-y-6">
-                    {/* Example Sidebar Content */}
-                    <div className="bg-white p-6 rounded-[var(--radius-md)] border border-[var(--border-color)]">
-                        <h3 className="font-serif text-lg font-bold mb-2">Step Explanation</h3>
-                        <p className="text-sm text-[var(--text-muted)] mb-4">
-                            This panel provides context and helper actions for the current step.
-                        </p>
-
-                        <div className="bg-gray-50 p-3 rounded-[var(--radius-sm)] mb-4 border border-gray-100 font-mono text-xs text-gray-600 break-all">
-                            cp -r src/components/Layout.tsx .
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Button variant="secondary" size="sm" className="w-full justify-center">Copy Command</Button>
-                            <Button variant="primary" size="sm" className="w-full justify-center">Build in Lovable</Button>
-                        </div>
-                    </div>
-                </aside>
+            <main className="flex-1 w-full max-w-[1400px] mx-auto p-6 md:p-10">
+                {children}
             </main>
 
             {/* Proof Footer */}
