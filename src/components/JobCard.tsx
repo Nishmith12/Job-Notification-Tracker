@@ -1,7 +1,5 @@
 import React from 'react';
 import type { Job, JobStatus } from '../types';
-import { Card } from './Card';
-import { Button } from './Button';
 import { useJobs } from '../context/JobContext';
 
 interface JobCardProps {
@@ -14,20 +12,13 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onView, onClick }) => {
     const { saveJob, removeJob, isSaved, updateJobStatus } = useJobs();
     const saved = isSaved(job.id);
 
-    const getMatchColor = (score?: number) => {
-        if (!score) return 'bg-gray-100 text-gray-600';
-        if (score >= 80) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-        if (score >= 60) return 'bg-amber-50 text-amber-700 border-amber-200';
-        if (score >= 40) return 'bg-orange-50 text-orange-700 border-orange-200';
-        return 'bg-gray-50 text-gray-500 border-gray-200';
-    };
-
-    const getStatusColor = (status?: JobStatus) => {
+    const getStatusStyles = (status?: JobStatus) => {
         switch (status) {
-            case 'Applied': return 'bg-blue-600 text-white shadow-md shadow-blue-200';
-            case 'Rejected': return 'bg-red-500 text-white shadow-md shadow-red-200';
-            case 'Selected': return 'bg-green-600 text-white shadow-md shadow-green-200';
-            default: return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+            case 'Applied': return 'bg-blue-50 text-blue-700 border-blue-100 ring-blue-500/10';
+            case 'Rejected': return 'bg-red-50 text-red-700 border-red-100 ring-red-500/10';
+            case 'Selected': return 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-emerald-500/10';
+            case 'Interview': return 'bg-violet-50 text-violet-700 border-violet-100 ring-violet-500/10';
+            default: return 'bg-slate-50 text-slate-600 border-slate-100 ring-slate-500/10';
         }
     };
 
@@ -51,92 +42,95 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onView, onClick }) => {
         if (onView) onView(job);
     };
 
+    // Generate a consistent gradient based on company name length
+    const getCompanyGradient = (name: string) => {
+        const gradients = [
+            'from-blue-500 to-indigo-600',
+            'from-emerald-400 to-teal-600',
+            'from-orange-400 to-pink-600',
+            'from-violet-400 to-purple-600',
+            'from-cyan-400 to-blue-600'
+        ];
+        const index = name.length % gradients.length;
+        return gradients[index];
+    };
+
     return (
-        <Card onClick={handleCardClick} className="group relative overflow-hidden cursor-pointer border border-transparent hover:border-[var(--border-hover)] hover:shadow-lg transition-all duration-300 bg-white">
-            <div className="p-6">
-                {/* Header */}
-                <div className="flex justify-between items-start mb-5">
-                    <div className="flex items-center gap-4">
-                        {job.logoUrl ? (
-                            <img src={job.logoUrl} alt={job.company} className="w-14 h-14 rounded-xl object-contain bg-white border border-gray-100 shadow-sm" />
-                        ) : (
-                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-2xl shadow-indigo-100 shadow-lg">
-                                {job.company.charAt(0)}
-                            </div>
-                        )}
-                        <div>
-                            <h3 className="font-heading font-bold text-lg text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors line-clamp-1 leading-tight">
-                                {job.title}
-                            </h3>
-                            <p className="text-sm font-medium text-[var(--text-muted)] mt-1">{job.company}</p>
+        <div
+            onClick={handleCardClick}
+            className="group relative bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+        >
+            {/* Top Gradient Line */}
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${getCompanyGradient(job.company)} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+
+            <div className="flex flex-col h-full gap-4">
+                {/* Header: Logo & Save */}
+                <div className="flex justify-between items-start gap-3">
+                    <div className="flex gap-4 min-w-0">
+                        {/* Logo */}
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getCompanyGradient(job.company)} flex items-center justify-center text-white text-lg font-bold shadow-sm shrink-0`}>
+                            {job.company.charAt(0)}
+                        </div>
+                        <div className="min-w-0 pt-0.5">
+                            <h3 className="font-bold text-slate-800 truncate leading-tight mb-1 group-hover:text-[var(--accent-primary)] transition-colors">{job.title}</h3>
+                            <p className="text-sm font-medium text-slate-500 truncate">{job.company}</p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Score Badge */}
-                    {job.matchScore !== undefined && (
-                        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getMatchColor(job.matchScore)} flex items-center gap-1`}>
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                            {job.matchScore}%
+                {/* Tech Stack (Skills) */}
+                <div className="flex flex-wrap gap-2 mt-1">
+                    {job.skills.slice(0, 3).map((skill, i) => (
+                        <span key={i} className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-slate-50 text-slate-600 border border-slate-100 group-hover:border-slate-200 transition-colors">
+                            {skill}
+                        </span>
+                    ))}
+                    {job.skills.length > 3 && (
+                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-slate-50 text-slate-400 border border-slate-100">
+                            +{job.skills.length - 3}
                         </span>
                     )}
                 </div>
 
-                {/* Info Row */}
-                <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)] font-medium mb-4">
-                    <span className="flex items-center gap-1.5 bg-[var(--bg-tertiary)] px-2.5 py-1 rounded-md">
-                        <svg className="w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        {job.location}
-                    </span>
-                    <span className="flex items-center gap-1.5 bg-[var(--bg-tertiary)] px-2.5 py-1 rounded-md">
-                        <svg className="w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                        {job.type}
-                    </span>
-                    <span className="flex items-center gap-1.5 bg-[var(--bg-tertiary)] px-2.5 py-1 rounded-md">
-                        <svg className="w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {/* Footer: Meta & Status */}
+                <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
+                    <div className="text-xs font-medium text-slate-400 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         {job.postedDaysAgo}d ago
-                    </span>
-                </div>
-
-                {/* Skills */}
-                <div className="flex flex-wrap gap-2 mb-6 h-6 overflow-hidden">
-                    {job.skills.map((skill, i) => (
-                        <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
-                            {skill}
-                        </span>
-                    ))}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-[var(--border-color)]">
-                    <div onClick={(e) => e.stopPropagation()} className="relative group/status">
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-bold leading-none cursor-pointer ${getStatusColor(job.status)}`}>
-                            <span>{job.status || 'Set Status'}</span>
-                            <svg className="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                        </div>
-                        <select
-                            value={job.status || 'Not Applied'}
-                            onChange={handleStatusChange}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        >
-                            <option value="Not Applied">Not Applied</option>
-                            <option value="Applied">Applied</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Selected">Selected</option>
-                        </select>
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <div className={`p-2 rounded-full transition-colors cursor-pointer ${saved ? 'bg-pink-50 text-pink-600' : 'hover:bg-gray-100 text-[var(--text-muted)]'}`} onClick={handleSave}>
-                            <svg className="w-5 h-5" fill={saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                        {/* Save Button */}
+                        <button
+                            onClick={handleSave}
+                            className={`p-1.5 rounded-full hover:bg-slate-50 transition-colors ${saved ? 'text-pink-500' : 'text-slate-300 hover:text-slate-500'}`}
+                        >
+                            <svg className={`w-5 h-5 ${saved ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
+                        </button>
+
+                        {/* Status Dropdown */}
+                        <div className="relative group/status" onClick={(e) => e.stopPropagation()}>
+                            <div className={`px-3 py-1 rounded-full text-xs font-bold border ring-1 flex items-center gap-1.5 transition-all ${getStatusStyles(job.status)}`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></span>
+                                {job.status || 'Applied'}
+                            </div>
+                            <select
+                                value={job.status || 'Not Applied'}
+                                onChange={handleStatusChange}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            >
+                                <option value="Not Applied">Not Applied</option>
+                                <option value="Applied">Applied</option>
+                                <option value="Interview">Interview</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Selected">Selected</option>
+                            </select>
                         </div>
-                        <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); if (onView) onView(job); }}>
-                            View Details
-                        </Button>
                     </div>
                 </div>
             </div>
-        </Card>
+        </div>
     );
 };

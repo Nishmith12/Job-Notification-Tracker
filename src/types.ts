@@ -20,7 +20,7 @@ export interface Job {
     status?: JobStatus; // New field
 }
 
-export type JobStatus = 'Not Applied' | 'Applied' | 'Rejected' | 'Selected';
+export type JobStatus = 'Not Applied' | 'Applied' | 'Rejected' | 'Selected' | 'Interview';
 
 export interface UserPreferences {
     roleKeywords: string[];
