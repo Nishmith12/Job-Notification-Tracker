@@ -6,6 +6,8 @@ import Digest from './pages/Digest';
 import Settings from './pages/Settings';
 import Proof from './pages/Proof';
 
+import NotFound from './pages/NotFound';
+
 function App() {
   return (
     <Router>
@@ -17,6 +19,7 @@ function App() {
           <Route path="/digest" element={<Digest />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/proof" element={<Proof />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>
     </Router>
