@@ -16,6 +16,10 @@ interface JobContextType {
     jobStatus: Record<string, JobStatus>;
     updateJobStatus: (jobId: string, status: JobStatus) => void;
     statusHistory: any[];
+    testResults: Record<string, boolean>;
+    updateTestResult: (id: string, value: boolean) => void;
+    resetTestResults: () => void;
+    allTestsPassed: boolean;
 }
 
 const JobContext = createContext<JobContextType | undefined>(undefined);
@@ -148,6 +152,25 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
+    const [testResults, setTestResults] = useState<Record<string, boolean>>(() => {
+        const saved = localStorage.getItem('jobTrackerTestResults');
+        return saved ? JSON.parse(saved) : {};
+    });
+
+    useEffect(() => {
+        localStorage.setItem('jobTrackerTestResults', JSON.stringify(testResults));
+    }, [testResults]);
+
+    const updateTestResult = (id: string, value: boolean) => {
+        setTestResults(prev => ({ ...prev, [id]: value }));
+    };
+
+    const resetTestResults = () => {
+        setTestResults({});
+    };
+
+    const allTestsPassed = Object.keys(testResults).length === 10 && Object.values(testResults).every(v => v);
+
     return (
         <JobContext.Provider value={{
             jobs,
@@ -161,7 +184,11 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             updatePreferences,
             jobStatus,
             updateJobStatus,
-            statusHistory
+            statusHistory,
+            testResults,
+            updateTestResult,
+            resetTestResults,
+            allTestsPassed
         }}>
             {children}
         </JobContext.Provider>

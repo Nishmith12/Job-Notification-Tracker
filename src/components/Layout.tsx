@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Button } from './Button';
+import { useJobs } from '../context/JobContext';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -13,6 +14,7 @@ export const Layout: React.FC<LayoutProps> = ({
     title,
     subtitle,
 }) => {
+    const { allTestsPassed } = useJobs(); // Need to access context here
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
 
@@ -21,7 +23,8 @@ export const Layout: React.FC<LayoutProps> = ({
         { name: 'Saved', path: '/saved' },
         { name: 'Digest', path: '/digest' },
         { name: 'Settings', path: '/settings' },
-        { name: 'Proof', path: '/proof' },
+        { name: 'Test', path: '/jt/07-test' },
+        { name: 'Ship', path: '/jt/08-ship', locked: !allTestsPassed },
     ];
 
     const getPageTitle = () => {
@@ -47,13 +50,18 @@ export const Layout: React.FC<LayoutProps> = ({
                                 key={item.name}
                                 to={item.path}
                                 className={({ isActive }) =>
-                                    `text-sm font-medium transition-colors hover:text-[var(--accent-primary)] ${isActive
+                                    `text-sm font-medium transition-colors flex items-center gap-1.5 ${isActive
                                         ? 'text-[var(--accent-primary)] border-b-2 border-[var(--accent-primary)]'
-                                        : 'text-[var(--text-muted)] border-b-2 border-transparent'
+                                        : 'text-[var(--text-muted)] border-b-2 border-transparent hover:text-[var(--accent-primary)]'
                                     }`
                                 }
                             >
                                 {item.name}
+                                {item.locked && (
+                                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                )}
                             </NavLink>
                         ))}
                     </nav>

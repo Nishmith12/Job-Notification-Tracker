@@ -7,6 +7,9 @@ import Digest from './pages/Digest';
 import Settings from './pages/Settings';
 import Proof from './pages/Proof';
 
+import TestPage from './pages/TestPage';
+import ShipPage from './pages/ShipPage';
+
 import NotFound from './pages/NotFound';
 
 import { JobProvider } from './context/JobContext';
@@ -23,6 +26,8 @@ function App() {
             <Route path="/digest" element={<Digest />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/proof" element={<Proof />} />
+            <Route path="/jt/07-test" element={<TestPage />} />
+            <Route path="/jt/08-ship" element={<ShipPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
