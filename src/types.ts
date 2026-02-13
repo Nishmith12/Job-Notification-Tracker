@@ -17,7 +17,10 @@ export interface Job {
     logoUrl?: string;
     isNew?: boolean;
     matchScore?: number;
+    status?: JobStatus; // New field
 }
+
+export type JobStatus = 'Not Applied' | 'Applied' | 'Rejected' | 'Selected';
 
 export interface UserPreferences {
     roleKeywords: string[];

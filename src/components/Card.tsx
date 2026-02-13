@@ -4,17 +4,20 @@ interface CardProps {
     children: React.ReactNode;
     title?: string;
     footer?: React.ReactNode;
-    className?: string; // Allow custom classes/styles if needed
+    className?: string;
+    onClick?: () => void;
 }
 
 export const Card: React.FC<CardProps> = ({
     children,
     title,
     footer,
-    className = ''
+    className = '',
+    onClick
 }) => {
     return (
         <div
+            onClick={onClick}
             className={`bg-white rounded-[var(--radius-md)] border border-[var(--border-color)] overflow-hidden ${className}`}
             style={{
                 padding: 'var(--space-md)',

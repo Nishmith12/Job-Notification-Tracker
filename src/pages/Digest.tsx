@@ -6,7 +6,7 @@ import { DigestService } from '../services/DigestService';
 import type { Job } from '../types';
 
 const Digest: React.FC = () => {
-    const { jobs, preferences, loadJobs } = useJobs();
+    const { jobs, preferences, loadJobs, statusHistory } = useJobs();
     const [digest, setDigest] = useState<Job[] | null>(null);
     const [generatedDate, setGeneratedDate] = useState<string>('');
 
@@ -157,6 +157,35 @@ const Digest: React.FC = () => {
                     <div className="text-center pt-8 text-xs text-gray-400">
                         <p>This digest was generated based on your preferences.</p>
                         <p>&copy; 2026 KodNest Job Tracker</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Recent Status Updates */}
+            {statusHistory.length > 0 && (
+                <div className="mt-8">
+                    <h3 className="text-xl font-serif font-bold text-[var(--text-primary)] mb-4">Recent Status Updates</h3>
+                    <div className="space-y-3">
+                        {statusHistory.map((update, index) => (
+                            <div key={index} className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
+                                <div>
+                                    <h4 className="font-bold text-[var(--text-primary)]">{update.title}</h4>
+                                    <p className="text-sm text-[var(--text-secondary)]">{update.company}</p>
+                                </div>
+                                <div className="text-right">
+                                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium mb-1
+                                        ${update.status === 'Applied' ? 'bg-blue-50 text-blue-700' :
+                                            update.status === 'Rejected' ? 'bg-red-50 text-red-700' :
+                                                update.status === 'Selected' ? 'bg-green-50 text-green-700' :
+                                                    'bg-gray-100 text-gray-600'}`}>
+                                        {update.status}
+                                    </span>
+                                    <p className="text-xs text-[var(--text-muted)]">
+                                        {new Date(update.date).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

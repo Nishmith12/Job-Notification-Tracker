@@ -14,11 +14,8 @@ const Dashboard: React.FC = () => {
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
-    const [locationFilter, setLocationFilter] = useState('');
-    const [modeFilter, setModeFilter] = useState('');
-    const [experienceFilter, setExperienceFilter] = useState('');
-    const [sourceFilter, setSourceFilter] = useState('');
     const [sortOption, setSortOption] = useState('match'); // Default to match score
+    const [statusFilter, setStatusFilter] = useState('All');
     const [showMatchesOnly, setShowMatchesOnly] = useState(false);
 
     const handleViewJob = (job: Job) => {
@@ -36,28 +33,34 @@ const Dashboard: React.FC = () => {
         const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
             job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
-        const matchesLocation = locationFilter ? job.location.includes(locationFilter) : true;
-        const matchesMode = modeFilter ? job.type === modeFilter : true;
-        const matchesExperience = experienceFilter ? job.experience === experienceFilter : true;
-        const matchesSource = sourceFilter ? job.source === sourceFilter : true;
+
+        // Status Filter
+        const matchesStatus = statusFilter === 'All'
+            ? true
+            : (job.status || 'Not Applied') === statusFilter;
 
         // Match Score Filter
         const matchesScore = showMatchesOnly ? (job.matchScore || 0) >= preferences.minMatchScore : true;
 
-        return matchesSearch && matchesLocation && matchesMode && matchesExperience && matchesSource && matchesScore;
+        return matchesSearch && matchesStatus && matchesScore;
     });
 
     const sortedJobs = [...filteredJobs].sort((a, b) => {
         if (sortOption === 'salary') {
-            // Rough heuristic for salary sorting (parsing strings like "₹15k" or "₹3-5 LPA")
             return b.salary.localeCompare(a.salary);
         }
-        if (sortOption === 'match') {
-            return (b.matchScore || 0) - (a.matchScore || 0); // Descending match score
+        if (sortOption === 'Match Score') { // Fixed value match
+            return (b.matchScore || 0) - (a.matchScore || 0);
+        }
+        if (sortOption === 'match') { // Handle legacy/default
+            return (b.matchScore || 0) - (a.matchScore || 0);
         }
         // Default to latest
         return a.postedDaysAgo - b.postedDaysAgo;
     });
+
+    // Check if job is saved - Note: savedJobs is Job[] now
+    const isJobSaved = (id: string) => savedJobs.some(j => j.id === id);
 
     return (
         <div className="flex flex-col gap-6 animate-fade-in relative">
@@ -104,12 +107,12 @@ const Dashboard: React.FC = () => {
 
             {jobs.length > 0 && (
                 <FilterBar
-                    onSearch={setSearchQuery}
-                    onLocationChange={setLocationFilter}
-                    onModeChange={setModeFilter}
-                    onExperienceChange={setExperienceFilter}
-                    onSourceChange={setSourceFilter}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    sortOption={sortOption}
                     onSortChange={setSortOption}
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
                 />
             )}
 
@@ -148,10 +151,7 @@ const Dashboard: React.FC = () => {
                     </p>
                     <Button variant="secondary" className="mt-4" onClick={() => {
                         setSearchQuery('');
-                        setLocationFilter('');
-                        setModeFilter('');
-                        setExperienceFilter('');
-                        setSourceFilter('');
+                        setStatusFilter('All');
                         setShowMatchesOnly(false);
                     }}>Clear All Filters</Button>
                 </div>
@@ -168,8 +168,8 @@ const Dashboard: React.FC = () => {
                     job={selectedJob}
                     isOpen={isModalOpen}
                     onClose={handleCloseModal}
-                    onSave={saveJob}
-                    isSaved={savedJobs.includes(selectedJob.id)}
+                    onSave={() => saveJob(selectedJob)}
+                    isSaved={isJobSaved(selectedJob.id)}
                 />
             )}
         </div>

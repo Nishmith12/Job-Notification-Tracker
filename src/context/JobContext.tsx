@@ -1,69 +1,89 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { Job, UserPreferences } from '../types';
+import type { Job, UserPreferences, JobStatus } from '../types';
 import { MockDataService } from '../services/MockDataService';
 import { ScoringService } from '../services/ScoringService';
 
 interface JobContextType {
     jobs: Job[];
-    savedJobs: string[];
-    preferences: UserPreferences;
     isLoading: boolean;
     loadJobs: () => Promise<void>;
-    saveJob: (id: string) => void;
+    savedJobs: Job[];
+    saveJob: (job: Job) => void; // Changed to accept full Job object
+    removeJob: (jobId: string) => void;
+    isSaved: (jobId: string) => boolean;
+    preferences: UserPreferences;
     updatePreferences: (prefs: Partial<UserPreferences>) => void;
+    jobStatus: Record<string, JobStatus>;
+    updateJobStatus: (jobId: string, status: JobStatus) => void;
+    statusHistory: any[];
 }
 
 const JobContext = createContext<JobContextType | undefined>(undefined);
 
-export const useJobs = () => {
-    const context = useContext(JobContext);
-    if (!context) {
-        throw new Error('useJobs must be used within a JobProvider');
-    }
-    return context;
-};
-
 export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    // Jobs State
     const [jobs, setJobs] = useState<Job[]>([]);
-    const [savedJobs, setSavedJobs] = useState<string[]>(() => {
-        const saved = localStorage.getItem('kodnest_saved_jobs');
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    // Saved Jobs State
+    const [savedJobs, setSavedJobs] = useState<Job[]>(() => {
+        const saved = localStorage.getItem('jobTrackerSavedJobs');
         return saved ? JSON.parse(saved) : [];
     });
-    const [isLoading, setIsLoading] = useState(false);
 
-    // Initialize preferences from localStorage or default
+    // Preferences State
     const [preferences, setPreferences] = useState<UserPreferences>(() => {
         const savedPrefs = localStorage.getItem('jobTrackerPreferences');
         return savedPrefs ? JSON.parse(savedPrefs) : {
             roleKeywords: [],
             locations: [],
-            workMode: [], // Default empty array
-            experienceLevel: 'Fresher', // Default
+            workMode: [],
+            experienceLevel: 'Fresher',
             skills: [],
             minMatchScore: 40
         };
     });
 
-    // Persist saved jobs
+    // Status State
+    const [jobStatus, setJobStatus] = useState<Record<string, JobStatus>>(() => {
+        const saved = localStorage.getItem('jobTrackerStatus');
+        return saved ? JSON.parse(saved) : {};
+    });
+
+    // Status History
+    const [statusHistory, setStatusHistory] = useState<any[]>(() => {
+        const saved = localStorage.getItem('jobTrackerStatusHistory');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // Persist Effects
     useEffect(() => {
-        localStorage.setItem('kodnest_saved_jobs', JSON.stringify(savedJobs));
+        localStorage.setItem('jobTrackerSavedJobs', JSON.stringify(savedJobs));
     }, [savedJobs]);
 
-    // Persist preferences
     useEffect(() => {
         localStorage.setItem('jobTrackerPreferences', JSON.stringify(preferences));
     }, [preferences]);
 
+    useEffect(() => {
+        localStorage.setItem('jobTrackerStatus', JSON.stringify(jobStatus));
+    }, [jobStatus]);
+
+    useEffect(() => {
+        localStorage.setItem('jobTrackerStatusHistory', JSON.stringify(statusHistory));
+    }, [statusHistory]);
+
+    // Actions
     const loadJobs = async () => {
         setIsLoading(true);
         try {
             const data = await MockDataService.generateJobs(60, preferences);
-            // Calculate scores immediately upon loading
-            const scoredData = data.map(job => ({
+            const processedData = data.map(job => ({
                 ...job,
-                matchScore: ScoringService.calculateMatchScore(job, preferences)
+                matchScore: ScoringService.calculateMatchScore(job, preferences),
+                status: jobStatus[job.id] || 'Not Applied'
             }));
-            setJobs(scoredData);
+            setJobs(processedData);
         } catch (error) {
             console.error("Failed to load jobs", error);
         } finally {
@@ -71,16 +91,24 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     };
 
-    const saveJob = (id: string) => {
-        setSavedJobs(prev =>
-            prev.includes(id) ? prev.filter(jobId => jobId !== id) : [...prev, id]
-        );
+    const saveJob = (job: Job) => {
+        setSavedJobs(prev => {
+            if (prev.some(j => j.id === job.id)) return prev;
+            return [...prev, job];
+        });
+    };
+
+    const removeJob = (jobId: string) => {
+        setSavedJobs(prev => prev.filter(job => job.id !== jobId));
+    };
+
+    const isSaved = (jobId: string) => {
+        return savedJobs.some(job => job.id === jobId);
     };
 
     const updatePreferences = (newPrefs: Partial<UserPreferences>) => {
         setPreferences(prev => {
             const updated = { ...prev, ...newPrefs };
-            // Re-score jobs immediately with new preferences
             setJobs(currentJobs => currentJobs.map(job => ({
                 ...job,
                 matchScore: ScoringService.calculateMatchScore(job, updated)
@@ -89,17 +117,61 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         });
     };
 
+    const updateJobStatus = (jobId: string, status: JobStatus) => {
+        // Update Status Map
+        setJobStatus(prev => ({
+            ...prev,
+            [jobId]: status
+        }));
+
+        // Update main Jobs list
+        setJobs(currentJobs => currentJobs.map(job =>
+            job.id === jobId ? { ...job, status } : job
+        ));
+
+        // Update Saved Jobs list if applicable
+        setSavedJobs(currentSaved => currentSaved.map(job =>
+            job.id === jobId ? { ...job, status } : job
+        ));
+
+        // Add to history
+        const job = jobs.find(j => j.id === jobId) || savedJobs.find(j => j.id === jobId);
+        if (job) {
+            const historyItem = {
+                jobId,
+                title: job.title,
+                company: job.company,
+                status,
+                date: new Date().toISOString()
+            };
+            setStatusHistory(prev => [historyItem, ...prev].slice(0, 10)); // Keep last 10
+        }
+    };
+
     return (
         <JobContext.Provider value={{
             jobs,
-            savedJobs,
-            preferences,
             isLoading,
             loadJobs,
+            savedJobs,
             saveJob,
-            updatePreferences
+            removeJob,
+            isSaved,
+            preferences,
+            updatePreferences,
+            jobStatus,
+            updateJobStatus,
+            statusHistory
         }}>
             {children}
         </JobContext.Provider>
     );
+};
+
+export const useJobs = () => {
+    const context = useContext(JobContext);
+    if (context === undefined) {
+        throw new Error('useJobs must be used within a JobProvider');
+    }
+    return context;
 };
