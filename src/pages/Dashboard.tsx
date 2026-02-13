@@ -102,6 +102,23 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
                 </Card>
+            ) : sortedJobs.length === 0 ? (
+                <div className="text-center py-20">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)]">No jobs match your filters</h3>
+                    <p className="text-[var(--text-muted)]">Try adjusting your search or filters to find what you're looking for.</p>
+                    <Button variant="secondary" className="mt-4" onClick={() => {
+                        setSearchQuery('');
+                        setLocationFilter('');
+                        setModeFilter('');
+                        setExperienceFilter('');
+                        setSourceFilter('');
+                    }}>Clear All Filters</Button>
+                </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {sortedJobs.map(job => (
