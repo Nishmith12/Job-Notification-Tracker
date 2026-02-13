@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Job, UserPreferences } from '../types';
 import { MockDataService } from '../services/MockDataService';
+import { ScoringService } from '../services/ScoringService';
 
 interface JobContextType {
     jobs: Job[];
@@ -29,11 +30,18 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return saved ? JSON.parse(saved) : [];
     });
     const [isLoading, setIsLoading] = useState(false);
-    const [preferences, setPreferences] = useState<UserPreferences>({
-        roleKeywords: [],
-        locations: [],
-        workMode: 'any',
-        experienceLevel: 'mid'
+
+    // Initialize preferences from localStorage or default
+    const [preferences, setPreferences] = useState<UserPreferences>(() => {
+        const savedPrefs = localStorage.getItem('jobTrackerPreferences');
+        return savedPrefs ? JSON.parse(savedPrefs) : {
+            roleKeywords: [],
+            locations: [],
+            workMode: [], // Default empty array
+            experienceLevel: 'Fresher', // Default
+            skills: [],
+            minMatchScore: 40
+        };
     });
 
     // Persist saved jobs
@@ -41,11 +49,21 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         localStorage.setItem('kodnest_saved_jobs', JSON.stringify(savedJobs));
     }, [savedJobs]);
 
+    // Persist preferences
+    useEffect(() => {
+        localStorage.setItem('jobTrackerPreferences', JSON.stringify(preferences));
+    }, [preferences]);
+
     const loadJobs = async () => {
         setIsLoading(true);
         try {
             const data = await MockDataService.generateJobs(60, preferences);
-            setJobs(data);
+            // Calculate scores immediately upon loading
+            const scoredData = data.map(job => ({
+                ...job,
+                matchScore: ScoringService.calculateMatchScore(job, preferences)
+            }));
+            setJobs(scoredData);
         } catch (error) {
             console.error("Failed to load jobs", error);
         } finally {
@@ -60,7 +78,15 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     const updatePreferences = (newPrefs: Partial<UserPreferences>) => {
-        setPreferences(prev => ({ ...prev, ...newPrefs }));
+        setPreferences(prev => {
+            const updated = { ...prev, ...newPrefs };
+            // Re-score jobs immediately with new preferences
+            setJobs(currentJobs => currentJobs.map(job => ({
+                ...job,
+                matchScore: ScoringService.calculateMatchScore(job, updated)
+            })));
+            return updated;
+        });
     };
 
     return (

@@ -13,9 +13,23 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onView }) => {
     const { saveJob, savedJobs } = useJobs();
     const isSaved = savedJobs.includes(job.id);
 
+    const getScoreColor = (score: number) => {
+        if (score >= 80) return 'bg-green-100 text-green-800 border-green-200';
+        if (score >= 60) return 'bg-amber-100 text-amber-800 border-amber-200';
+        if (score >= 40) return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-50 text-gray-400 border-gray-100';
+    };
+
     return (
-        <Card className="hover:border-[var(--accent-primary)] transition-all duration-300 group hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
+        <Card className="hover:border-[var(--accent-primary)] transition-all duration-300 group hover:shadow-md relative overflow-hidden">
+            {/* Match Score Badge */}
+            {job.matchScore !== undefined && (
+                <div className={`absolute top-0 right-0 px-3 py-1 text-xs font-bold border-b border-l rounded-bl-lg z-10 ${getScoreColor(job.matchScore)}`}>
+                    {job.matchScore}% Match
+                </div>
+            )}
+
+            <div className="flex justify-between items-start mb-4 pt-2">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-xl font-serif font-bold text-[var(--text-primary)] uppercase">
                         {job.company.substring(0, 2)}
@@ -27,7 +41,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onView }) => {
                         <p className="text-sm text-[var(--text-muted)]">{job.company} • {job.location}</p>
                     </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col items-end gap-1 mt-6">
+                    {/* Space for the badge above */}
                     {job.isNew && (
                         <span className="bg-red-50 text-[var(--accent-primary)] text-xs font-bold px-2 py-1 rounded-full">
                             NEW

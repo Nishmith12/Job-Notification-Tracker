@@ -16,11 +16,14 @@ export interface Job {
     tags: string[];
     logoUrl?: string;
     isNew?: boolean;
+    matchScore?: number;
 }
 
 export interface UserPreferences {
     roleKeywords: string[];
     locations: string[];
-    workMode: 'remote' | 'hybrid' | 'onsite' | 'any';
-    experienceLevel: 'entry' | 'mid' | 'senior' | 'lead';
+    workMode: string[]; // Changed to array for multi-select
+    experienceLevel: string;
+    skills: string[]; // New field
+    minMatchScore: number; // New field
 }

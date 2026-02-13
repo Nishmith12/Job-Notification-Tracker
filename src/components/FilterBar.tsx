@@ -68,6 +68,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     </select>
 
                     <select className="px-3 py-2 bg-white border border-gray-200 rounded-[var(--radius-sm)] text-sm outline-none cursor-pointer hover:border-gray-300" onChange={(e) => onSortChange(e.target.value)}>
+                        <option value="match">Sort: Match Score</option>
                         <option value="latest">Sort: Latest</option>
                         <option value="salary">Sort: Salary</option>
                     </select>
