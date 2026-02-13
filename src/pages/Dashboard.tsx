@@ -1,21 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { Link } from 'react-router-dom';
 import { useJobs } from '../context/JobContext';
 import { JobCard } from '../components/JobCard';
+import { FilterBar } from '../components/FilterBar';
+import { JobDetailModal } from '../components/JobDetailModal';
+import type { Job } from '../types';
 
 const Dashboard: React.FC = () => {
-    const { jobs, isLoading, loadJobs } = useJobs();
+    const { jobs, isLoading, loadJobs, savedJobs, saveJob } = useJobs();
+    const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [locationFilter, setLocationFilter] = useState('');
+    const [modeFilter, setModeFilter] = useState('');
+    const [experienceFilter, setExperienceFilter] = useState('');
+    const [sourceFilter, setSourceFilter] = useState('');
+    const [sortOption, setSortOption] = useState('latest');
+
+    const handleViewJob = (job: Job) => {
+        setSelectedJob(job);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setTimeout(() => setSelectedJob(null), 300); // Clear after animation
+    };
+
+    // Filter Logic
+    const filteredJobs = jobs.filter(job => {
+        const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+        const matchesLocation = locationFilter ? job.location.includes(locationFilter) : true;
+        const matchesMode = modeFilter ? job.type === modeFilter : true;
+        const matchesExperience = experienceFilter ? job.experience === experienceFilter : true;
+        const matchesSource = sourceFilter ? job.source === sourceFilter : true;
+
+        return matchesSearch && matchesLocation && matchesMode && matchesExperience && matchesSource;
+    });
+
+    const sortedJobs = [...filteredJobs].sort((a, b) => {
+        if (sortOption === 'salary') {
+            // Rough heuristic for salary sorting
+            return b.salary.localeCompare(a.salary);
+        }
+        return a.postedDaysAgo - b.postedDaysAgo; // Latest (lowest days ago) first
+    });
 
     return (
-        <div className="flex flex-col gap-8 animate-fade-in">
+        <div className="flex flex-col gap-6 animate-fade-in relative">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-4xl font-serif font-bold text-[var(--text-primary)]">Dashboard</h1>
                     <p className="text-[var(--text-muted)] mt-1">
                         {jobs.length > 0
-                            ? `Found ${jobs.length} relevant opportunities.`
+                            ? `Found ${sortedJobs.length} relevant opportunities.`
                             : 'Your daily job tracking overview.'}
                     </p>
                 </div>
@@ -25,11 +68,19 @@ const Dashboard: React.FC = () => {
                             {isLoading ? 'Refreshing...' : 'Refresh Feed'}
                         </Button>
                     )}
-                    <Link to="/settings">
-                        <Button variant="secondary" size="sm">Manage Preferences</Button>
-                    </Link>
                 </div>
             </div>
+
+            {jobs.length > 0 && (
+                <FilterBar
+                    onSearch={setSearchQuery}
+                    onLocationChange={setLocationFilter}
+                    onModeChange={setModeFilter}
+                    onExperienceChange={setExperienceFilter}
+                    onSourceChange={setSourceFilter}
+                    onSortChange={setSortOption}
+                />
+            )}
 
             {jobs.length === 0 ? (
                 <Card className="py-20 text-center border-dashed bg-gray-50/50">
@@ -52,11 +103,21 @@ const Dashboard: React.FC = () => {
                     </div>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                    {jobs.map(job => (
-                        <JobCard key={job.id} job={job} />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {sortedJobs.map(job => (
+                        <JobCard key={job.id} job={job} onView={handleViewJob} />
                     ))}
                 </div>
+            )}
+
+            {selectedJob && (
+                <JobDetailModal
+                    job={selectedJob}
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    onSave={saveJob}
+                    isSaved={savedJobs.includes(selectedJob.id)}
+                />
             )}
         </div>
     );

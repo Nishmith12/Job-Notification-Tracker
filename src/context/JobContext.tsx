@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Job, UserPreferences } from '../types';
 import { MockDataService } from '../services/MockDataService';
 
@@ -24,7 +24,10 @@ export const useJobs = () => {
 
 export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [jobs, setJobs] = useState<Job[]>([]);
-    const [savedJobs, setSavedJobs] = useState<string[]>([]);
+    const [savedJobs, setSavedJobs] = useState<string[]>(() => {
+        const saved = localStorage.getItem('kodnest_saved_jobs');
+        return saved ? JSON.parse(saved) : [];
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [preferences, setPreferences] = useState<UserPreferences>({
         roleKeywords: [],
@@ -33,10 +36,15 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         experienceLevel: 'mid'
     });
 
+    // Persist saved jobs
+    useEffect(() => {
+        localStorage.setItem('kodnest_saved_jobs', JSON.stringify(savedJobs));
+    }, [savedJobs]);
+
     const loadJobs = async () => {
         setIsLoading(true);
         try {
-            const data = await MockDataService.generateJobs(12, preferences);
+            const data = await MockDataService.generateJobs(60, preferences);
             setJobs(data);
         } catch (error) {
             console.error("Failed to load jobs", error);

@@ -4,12 +4,17 @@ export interface Job {
     company: string;
     location: string;
     type: 'Remote' | 'Hybrid' | 'On-site';
+    experience: 'Fresher' | '0-1' | '1-3' | '3-5' | '5+';
     salary: string;
     postedAt: string;
+    postedDaysAgo: number;
     description: string;
-    requirements: string[];
+    requirements: string[]; // Keeping for backward compatibility or mapping to skills
+    skills: string[];
+    source: 'LinkedIn' | 'Naukri' | 'Indeed';
+    applyUrl: string;
     tags: string[];
-    logoUrl?: string; // Placeholder for company logo
+    logoUrl?: string;
     isNew?: boolean;
 }
 
