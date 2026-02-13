@@ -25,7 +25,8 @@ function App() {
             <Route path="/saved" element={<Saved />} />
             <Route path="/digest" element={<Digest />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/proof" element={<Proof />} />
+            <Route path="/jt/proof" element={<Proof />} />
+            <Route path="/proof" element={<Proof />} /> {/* Alias */}
             <Route path="/jt/07-test" element={<TestPage />} />
             <Route path="/jt/08-ship" element={<ShipPage />} />
             <Route path="*" element={<NotFound />} />

@@ -20,6 +20,8 @@ interface JobContextType {
     updateTestResult: (id: string, value: boolean) => void;
     resetTestResults: () => void;
     allTestsPassed: boolean;
+    submissionLinks: { lovable: string; github: string; deployed: string };
+    updateSubmissionLink: (key: 'lovable' | 'github' | 'deployed', value: string) => void;
 }
 
 const JobContext = createContext<JobContextType | undefined>(undefined);
@@ -171,6 +173,19 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const allTestsPassed = Object.keys(testResults).length === 10 && Object.values(testResults).every(v => v);
 
+    const [submissionLinks, setSubmissionLinks] = useState(() => {
+        const saved = localStorage.getItem('jobTrackerSubmission');
+        return saved ? JSON.parse(saved) : { lovable: '', github: '', deployed: '' };
+    });
+
+    useEffect(() => {
+        localStorage.setItem('jobTrackerSubmission', JSON.stringify(submissionLinks));
+    }, [submissionLinks]);
+
+    const updateSubmissionLink = (key: 'lovable' | 'github' | 'deployed', value: string) => {
+        setSubmissionLinks((prev: { lovable: string; github: string; deployed: string }) => ({ ...prev, [key]: value }));
+    };
+
     return (
         <JobContext.Provider value={{
             jobs,
@@ -188,7 +203,9 @@ export const JobProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             testResults,
             updateTestResult,
             resetTestResults,
-            allTestsPassed
+            allTestsPassed,
+            submissionLinks,
+            updateSubmissionLink
         }}>
             {children}
         </JobContext.Provider>

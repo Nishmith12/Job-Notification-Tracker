@@ -23,6 +23,7 @@ export const Layout: React.FC<LayoutProps> = ({
         { name: 'Saved', path: '/saved' },
         { name: 'Digest', path: '/digest' },
         { name: 'Settings', path: '/settings' },
+        { name: 'Proof', path: '/jt/proof' },
         { name: 'Test', path: '/jt/07-test' },
         { name: 'Ship', path: '/jt/08-ship', locked: !allTestsPassed },
     ];

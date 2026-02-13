@@ -5,16 +5,16 @@ import { useJobs } from '../context/JobContext';
 import { Link } from 'react-router-dom';
 
 const TEST_ITEMS = [
-    { id: '1', label: 'Preferences persist after refresh' },
-    { id: '2', label: 'Match score calculates correctly' },
-    { id: '3', label: '"Show only matches" toggle works' },
-    { id: '4', label: 'Save job persists after refresh' },
-    { id: '5', label: 'Apply opens in new tab' },
-    { id: '6', label: 'Status update persists after refresh' },
-    { id: '7', label: 'Status filter works correctly' },
-    { id: '8', label: 'Digest generates top 10 by score' },
-    { id: '9', label: 'Digest persists for the day' },
-    { id: '10', label: 'No console errors on main pages' }
+    { id: '1', label: 'Preferences persist after refresh', desc: 'Change filters/settings, reload page, check if saved.' },
+    { id: '2', label: 'Match score calculates correctly', desc: 'Verify score updates based on keywords/role.' },
+    { id: '3', label: '"Show only matches" toggle works', desc: 'Enable toggle, ensure low matches disappear.' },
+    { id: '4', label: 'Save job persists after refresh', desc: 'Save a job, reload, check Saved page.' },
+    { id: '5', label: 'Apply opens in new tab', desc: 'Click Apply, check for new browser tab.' },
+    { id: '6', label: 'Status update persists after refresh', desc: 'Change status, reload, verify status retained.' },
+    { id: '7', label: 'Status filter works correctly', desc: 'Filter by "Applied", ensure only applied jobs show.' },
+    { id: '8', label: 'Digest generates top 10 by score', desc: 'Check Digest page for high scoring jobs.' },
+    { id: '9', label: 'Digest persists for the day', desc: 'Reload/Nav away, return to Digest, same jobs.' },
+    { id: '10', label: 'No console errors on main pages', desc: 'Open F12 Console, browse pages, check for red errors.' }
 ];
 
 const TestPage: React.FC = () => {
@@ -54,19 +54,24 @@ const TestPage: React.FC = () => {
                 {/* Checklist */}
                 <div className="space-y-4">
                     {TEST_ITEMS.map((item) => (
-                        <label key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-transparent hover:border-gray-200 group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 w-5 h-5 rounded border-gray-300 text-[var(--accent-primary)] focus:ring-[var(--accent-primary)] cursor-pointer"
-                                checked={!!testResults[item.id]}
-                                onChange={(e) => updateTestResult(item.id, e.target.checked)}
-                            />
-                            <div>
-                                <span className={`text-sm font-medium ${testResults[item.id] ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>
-                                    {item.label}
-                                </span>
-                            </div>
-                        </label>
+                        <div key={item.id} className="group relative">
+                            <label className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
+                                <input
+                                    type="checkbox"
+                                    className="mt-1 w-5 h-5 rounded border-gray-300 text-[var(--accent-primary)] focus:ring-[var(--accent-primary)] cursor-pointer"
+                                    checked={!!testResults[item.id]}
+                                    onChange={(e) => updateTestResult(item.id, e.target.checked)}
+                                />
+                                <div className="flex-1">
+                                    <span className={`text-sm font-medium block ${testResults[item.id] ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'}`}>
+                                        {item.label}
+                                    </span>
+                                    <span className="text-xs text-gray-400 mt-0.5 block group-hover:text-gray-500">
+                                        How to test: {item.desc}
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
                     ))}
                 </div>
 
